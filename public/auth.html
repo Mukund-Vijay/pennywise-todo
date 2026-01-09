@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Welcome to Derry - Sign In</title>
+    <link rel="stylesheet" href="auth.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+</head>
+<body>
+    <!-- Blood Drip Effect -->
+    <div class="blood-drips">
+        <div class="blood-drip" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="blood-drip" style="left: 25%; animation-delay: 1s;"></div>
+        <div class="blood-drip" style="left: 40%; animation-delay: 0.5s;"></div>
+        <div class="blood-drip" style="left: 60%; animation-delay: 1.5s;"></div>
+        <div class="blood-drip" style="left: 75%; animation-delay: 0.8s;"></div>
+        <div class="blood-drip" style="left: 90%; animation-delay: 1.2s;"></div>
+    </div>
+
+    <!-- Floating Balloons -->
+    <div class="floating-balloons">
+        <div class="balloon-float" style="left: 15%; animation-duration: 8s;">🎈</div>
+        <div class="balloon-float" style="left: 50%; animation-duration: 10s;">🎈</div>
+        <div class="balloon-float" style="left: 85%; animation-duration: 9s;">🎈</div>
+    </div>
+
+    <div class="auth-container">
+        <div class="sewer-entrance">
+            <div class="title-container">
+                <h1 class="derry-title">WELCOME TO DERRY</h1>
+                <p class="derry-subtitle">Where all your tasks float...</p>
+            </div>
+
+            <div class="auth-box">
+                <!-- Login Form -->
+                <div id="loginForm" class="form-container active">
+                    <h2 class="form-title">Enter the Sewers</h2>
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <input type="email" id="loginEmail" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="loginPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="btn-submit">FLOAT IN</button>
+                        <p class="form-switch">
+                            New to Derry? <span id="showRegister" class="link">Join Us</span>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" class="form-container">
+                    <h2 class="form-title">Join the Float</h2>
+                    <form id="registerFormElement">
+                        <div class="form-group">
+                            <input type="text" id="registerUsername" placeholder="Username" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="registerEmail" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="registerPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="btn-submit">JOIN US</button>
+                        <p class="form-switch">
+                            Already floating? <span id="showLogin" class="link">Sign In</span>
+                        </p>
+                    </form>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+            <div class="pennywise-quote">
+                <p>"We all float down here..."</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>

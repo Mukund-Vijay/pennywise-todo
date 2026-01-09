@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="description" content="A horror-themed todo app inspired by Pennywise">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Derry Todo">
+    <title>Welcome to Derry - Todo List</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="balloon-container">
+                <div class="balloon"></div>
+            </div>
+            <h1 class="title">WELCOME TO DERRY</h1>
+            <p class="subtitle">We all float down here... with our tasks</p>
+        </div>
+
+        <div class="todo-box">
+            <div class="input-section">
+                <input type="text" id="todoInput" placeholder="Add your fears... I mean tasks">
+                <button id="addBtn" class="add-btn">ADD</button>
+            </div>
+
+            <div class="day-selector" id="daySelector">
+                <label class="day-label">Schedule for:</label>
+                <div class="days-wrapper">
+                    <label class="day-checkbox"><input type="radio" name="day" value="0" id="day-0"><span>Sun</span></label>
+                    <label class="day-checkbox"><input type="radio" name="day" value="1" id="day-1"><span>Mon</span></label>
+                    <label class="day-checkbox"><input type="radio" name="day" value="2" id="day-2"><span>Tue</span></label>
+                    <label class="day-checkbox"><input type="radio" name="day" value="3" id="day-3"><span>Wed</span></label>
+                    <label class="day-checkbox"><input type="radio" name="day" value="4" id="day-4"><span>Thu</span></label>
+                    <label class="day-checkbox"><input type="radio" name="day" value="5" id="day-5"><span>Fri</span></label>
+                    <label class="day-checkbox"><input type="radio" name="day" value="6" id="day-6"><span>Sat</span></label>
+                </div>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+            </div>
+
+            <ul id="todoList" class="todo-list"></ul>
+
+            <div class="footer">
+                <span id="itemCount">0 tasks remaining</span>
+                <button id="clearCompleted" class="clear-btn">Clear Completed</button>
+                <button id="weeklySummaryBtn" class="summary-btn">📊 Weekly Summary</button>
+            </div>
+        </div>
+
+        <div class="pennywise-quote">
+            <p>"You'll float too..."</p>
+        </div>
+    </div>
+
+    <div class="sewer-grate"></div>
+
+    <!-- Jumpscare Modal -->
+    <div id="jumpscareModal" class="jumpscare-modal">
+        <div class="jumpscare-content">
+            <div class="pennywise-image-container">
+                <img src="https://media1.tenor.com/m/vqK5u5f2BlwAAAAC/pennywise-it.gif" 
+                     alt="Pennywise" 
+                     class="pennywise-gif"
+                     onerror="this.src='https://media.giphy.com/media/d2Z4NKuQIDjW99q8/giphy.gif'">
+            </div>
+            <h2 class="jumpscare-text">TIME'S UP!</h2>
+            <p class="jumpscare-subtitle">You'll float too...</p>
+            <p class="jumpscare-subtitle-2">You missed your deadline</p>
+            <div class="overdue-tasks" id="overdueTasks"></div>
+            <button id="closeJumpscare" class="close-jumpscare">I UNDERSTAND</button>
+        </div>
+    </div>
+
+    <!-- Weekly Summary Modal -->
+    <div id="summaryModal" class="summary-modal">
+        <div class="summary-content">
+            <button id="closeSummary" class="close-summary">✕</button>
+            <h2 class="summary-title">🎪 WEEKLY SUMMARY 🎪</h2>
+            <p class="summary-subtitle">The Clown's Weekly Report</p>
+            
+            <div class="summary-overall">
+                <div class="stat-card">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-value" id="totalScheduled">0</div>
+                    <div class="stat-label">Tasks Scheduled</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="totalCompleted">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-value" id="onTimeRate">0%</div>
+                    <div class="stat-label">On Time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="completionRate">0%</div>
+                    <div class="stat-label">Completion Rate</div>
+                </div>
+            </div>
+
+            <div class="productivity-analysis">
+                <div class="most-productive">
+                    <div class="productivity-icon">🏆</div>
+                    <h3>Most Productive Day</h3>
+                    <div id="mostProductiveDay" class="productivity-day">-</div>
+                    <div id="mostProductiveStats" class="productivity-stats"></div>
+                </div>
+                <div class="least-productive">
+                    <div class="productivity-icon">⚠️</div>
+                    <h3>Least Productive Day</h3>
+                    <div id="leastProductiveDay" class="productivity-day">-</div>
+                    <div id="leastProductiveStats" class="productivity-stats"></div>
+                </div>
+            </div>
+
+            <div class="daily-breakdown">
+                <h3>📅 Daily Breakdown</h3>
+                <div id="dailyStats" class="daily-stats-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balloon Burst Animation -->
+    <canvas id="balloonCanvas"></canvas>
+
+    <script src="app.js"></script>
+    
+    <!-- Audio Files -->
+    <audio id="ambientSound" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/2472/2472-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="jumpscareSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/126/126-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="balloonPopSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/1454/1454-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="clickSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    </audio>
+</body>
+</html>

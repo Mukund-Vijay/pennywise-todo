@@ -2,7 +2,7 @@
   "name": "pennywise-todo",
   "version": "2.0.0",
   "description": "Horror-themed todo app with Pennywise aesthetics",
-  "main": "electron-main.js",
+  "main": "server.js",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"

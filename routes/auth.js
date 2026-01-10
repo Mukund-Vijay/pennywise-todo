@@ -115,4 +115,30 @@ router.post('/reset-password', async (req, res) => {
     }
 });
 
+// Delete Account
+router.delete('/delete-account', async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ error: 'Access denied' });
+        }
+
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = verified.userId;
+
+        // Delete user's todos first
+        db.prepare('DELETE FROM todos WHERE user_id = ?').run(userId);
+        
+        // Delete user
+        db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+
+        res.json({ message: 'Account deleted successfully. You have left Derry...' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
+    }
+});
+
 module.exports = router;

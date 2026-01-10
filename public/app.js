@@ -67,6 +67,8 @@ const summaryModal = document.getElementById('summaryModal');
 const weeklySummaryBtn = document.getElementById('weeklySummaryBtn');
 const closeSummary = document.getElementById('closeSummary');
 const dayRadios = document.querySelectorAll('.day-checkbox input[type="radio"]');
+const logoutBtn = document.getElementById('logoutBtn');
+const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
 balloonCanvas.width = window.innerWidth;
 balloonCanvas.height = window.innerHeight;
@@ -471,4 +473,42 @@ async function showWeeklySummary() {
     }
 }
 
-init();
+// Logout
+logoutBtn.addEventListener('click', () => {
+    if (confirm('Leave Derry? Your tasks will be waiting when you return...')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/auth.html';
+    }
+});
+
+// Delete Account
+deleteAccountBtn.addEventListener('click', async () => {
+    const confirmation = prompt('⚠️ WARNING: This will permanently delete your account and ALL tasks!\n\nType "DELETE" to confirm:');
+    
+    if (confirmation === 'DELETE') {
+        try {
+            const response = await fetch(`${API_URL}/auth/delete-account`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert(data.message);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/auth.html';
+            } else {
+                showNotification(data.error || 'Failed to delete account');
+            }
+        } catch (error) {
+            console.error('Delete account error:', error);
+            showNotification('Connection failed');
+        }
+    }
+});
+

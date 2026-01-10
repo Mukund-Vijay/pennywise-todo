@@ -5,9 +5,6 @@ package-lock.json
 # Environment variables
 .env
 
-# Database
-database/pennywise.json
-
 # Build outputs
 dist/
 build/

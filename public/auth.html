@@ -53,6 +53,9 @@
                         <p class="form-switch">
                             New to Derry? <span id="showRegister" class="link">Join Us</span>
                         </p>
+                        <p class="form-switch">
+                            <span id="showReset" class="link" style="color: #ff6600;">Forgot Password?</span>
+                        </p>
                     </form>
                 </div>
 
@@ -76,12 +79,51 @@
                     </form>
                 </div>
 
+                <!-- Reset Password Form -->
+                <div id="resetForm" class="form-container">
+                    <h2 class="form-title">Reset Password</h2>
+                    <form id="resetFormElement">
+                        <div class="form-group">
+                            <input type="email" id="resetEmail" placeholder="Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="resetUsername" placeholder="Username" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="resetNewPassword" placeholder="New Password" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="resetConfirmPassword" placeholder="Confirm Password" required>
+                        </div>
+                        <button type="submit" class="btn-submit">RESET PASSWORD</button>
+                        <p class="form-switch">
+                            Remember now? <span id="backToLogin" class="link">Sign In</span>
+                        </p>
+                    </form>
+                </div>
+
                 <div id="errorMessage" class="error-message"></div>
             </div>
 
             <div class="pennywise-quote">
                 <p>"We all float down here..."</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div id="resetModal" class="reset-modal" style="display: none;">
+        <div class="reset-content">
+            <button id="closeReset" class="close-reset">✕</button>
+            <h2 style="color: #ff0000; font-family: 'Creepster', cursive; text-align: center; margin-bottom: 20px;">RESET PASSWORD</h2>
+            <p style="color: #999; text-align: center; margin-bottom: 20px;">Enter your email and username to reset your password</p>
+            <form id="resetForm">
+                <input type="email" id="resetEmail" placeholder="Email" required>
+                <input type="text" id="resetUsername" placeholder="Username" required>
+                <input type="password" id="resetNewPassword" placeholder="New Password" required>
+                <input type="password" id="resetConfirmPassword" placeholder="Confirm Password" required>
+                <button type="submit" class="auth-btn">RESET PASSWORD</button>
+            </form>
         </div>
     </div>
 

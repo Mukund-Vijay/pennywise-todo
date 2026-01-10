@@ -289,8 +289,8 @@ body::before {
 }
 
 .todo-item.completed .todo-text {
-    text-decoration: line-through;
-    color: #777;
+    text-decoration: line-through !important;
+    color: #777 !important;
 }
 
 .todo-checkbox {

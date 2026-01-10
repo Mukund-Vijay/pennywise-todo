@@ -87,4 +87,32 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Reset Password
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { email, username, newPassword } = req.body;
+
+        if (!email || !username || !newPassword) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        // Find user by both email and username for security
+        const user = db.prepare('SELECT * FROM users WHERE email = ? AND username = ?').get(email, username);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found. Please check your email and username.' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashedPassword, user.id);
+
+        res.json({ message: 'Password reset successful. You can now login with your new password.' });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ error: 'Password reset failed' });
+    }
+});
+
 module.exports = router;

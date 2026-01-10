@@ -4,21 +4,43 @@ const path = require('path');
 const DB_PATH = path.join(__dirname, 'pennywise.json');
 
 function readDB() {
-    if (!fs.existsSync(DB_PATH)) {
+    try {
+        if (!fs.existsSync(DB_PATH)) {
+            console.log('Database file not found, creating new one...');
+            const defaultData = { users: [], todos: [] };
+            writeDB(defaultData);
+            return defaultData;
+        }
+        const fileContent = fs.readFileSync(DB_PATH, 'utf8');
+        return JSON.parse(fileContent);
+    } catch (error) {
+        console.error('Error reading database:', error);
         return { users: [], todos: [] };
     }
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
 }
 
 function writeDB(data) {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    try {
+        // Ensure directory exists
+        const dir = path.dirname(DB_PATH);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error writing database:', error);
+    }
 }
 
 function initialize() {
-    if (!fs.existsSync(DB_PATH)) {
-        writeDB({ users: [], todos: [] });
+    try {
+        if (!fs.existsSync(DB_PATH)) {
+            writeDB({ users: [], todos: [] });
+        }
+        console.log('🎪 Database initialized successfully');
+    } catch (error) {
+        console.error('Error initializing database:', error);
     }
-    console.log('🎪 Database initialized successfully');
 }
 
 const db = {

@@ -13,6 +13,16 @@ const PORT = process.env.PORT || 3000;
 // Trust proxy for production
 app.set('trust proxy', 1);
 
+// Prevent caching for dynamic files
+app.use((req, res, next) => {
+    if (req.path.endsWith('.js') || req.path.endsWith('.css') || req.path.endsWith('.html')) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+    next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());

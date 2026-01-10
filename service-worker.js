@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pennywise-todo-v2';
+const CACHE_NAME = 'pennywise-todo-v3';
 const urlsToCache = [
   '/',
   '/auth.html',
@@ -13,13 +13,13 @@ const urlsToCache = [
 // Install service worker
 self.addEventListener('install', event => {
   console.log('[Service Worker] Installing...');
+  self.skipWaiting(); // Force immediate activation
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[Service Worker] Caching files');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
   );
 });
 

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
 // Form switching
 document.getElementById('showRegister').addEventListener('click', () => {

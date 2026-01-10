@@ -14,8 +14,9 @@ body {
     justify-content: center;
     align-items: center;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
     color: #fff;
+    padding: 20px 0;
 }
 
 body::before {
@@ -152,11 +153,12 @@ body::before {
     border: 3px solid #ff0000;
     border-radius: 20px;
     padding: 40px;
+    max-height: 85vh;
+    overflow-y: auto;
     box-shadow: 
         0 0 40px rgba(255, 0, 0, 0.4),
         inset 0 0 30px rgba(0, 0, 0, 0.8);
     position: relative;
-    overflow: hidden;
 }
 
 .auth-box::before {

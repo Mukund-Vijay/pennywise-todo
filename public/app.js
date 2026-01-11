@@ -117,17 +117,6 @@ if ('serviceWorker' in navigator) {
         .catch(err => console.log('Service Worker registration failed', err));
 }
 
-// Logout button
-const logoutBtn = document.createElement('button');
-logoutBtn.textContent = `👋 ${user.username}`;
-logoutBtn.style.cssText = `position: fixed; top: 20px; left: 20px; padding: 10px 20px; background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000; border-radius: 20px; color: #fff; cursor: pointer; z-index: 1000;`;
-logoutBtn.addEventListener('click', () => {
-    playSound('click');
-    localStorage.clear();
-    window.location.href = '/auth.html';
-});
-document.body.appendChild(logoutBtn);
-
 // API Functions
 async function fetchTodos() {
     try {

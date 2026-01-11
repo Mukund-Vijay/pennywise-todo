@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pennywise-todo-v3';
+const CACHE_NAME = 'pennywise-todo-v4';
 const urlsToCache = [
   '/',
   '/auth.html',
@@ -12,14 +12,26 @@ const urlsToCache = [
 
 // Install service worker
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Installing...');
+  console.log('[Service Worker] Installing v4...');
   self.skipWaiting(); // Force immediate activation
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[Service Worker] Caching files');
-        return cache.addAll(urlsToCache);
-      })
+    caches.keys().then(cacheNames => {
+      // Delete all old caches
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+      return caches.open(CACHE_NAME)
+        .then(cache => {
+          console.log('[Service Worker] Caching files');
+          return cache.addAll(urlsToCache);
+        });
+    })
   );
 });
 

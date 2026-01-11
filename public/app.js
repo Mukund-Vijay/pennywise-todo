@@ -25,28 +25,8 @@ function initAudio() {
     }
 }
 
-// Sound toggle button
-const soundBtn = document.createElement('button');
-soundBtn.id = 'soundToggle';
-soundBtn.innerHTML = '🔊';
-soundBtn.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 10px 15px; background: rgba(255, 0, 0, 0.3); border: 2px solid #ff0000; border-radius: 50%; color: #fff; font-size: 1.5rem; cursor: pointer; z-index: 1000;`;
-document.body.appendChild(soundBtn);
-
-let soundEnabled = true;
-soundBtn.addEventListener('click', () => {
-    soundEnabled = !soundEnabled;
-    soundBtn.innerHTML = soundEnabled ? '🔊' : '🔇';
-    if (soundEnabled) {
-        if (sounds.ambient) sounds.ambient.play().catch(() => {});
-    } else {
-        Object.values(sounds).forEach(sound => {
-            if (sound) sound.pause();
-        });
-    }
-});
-
 function playSound(soundName) {
-    if (soundEnabled && sounds[soundName]) {
+    if (sounds[soundName]) {
         sounds[soundName].currentTime = 0;
         sounds[soundName].play().catch(() => {});
     }

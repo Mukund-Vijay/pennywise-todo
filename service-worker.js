@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pennywise-todo-v4';
+const CACHE_NAME = 'pennywise-todo-v5';
 const urlsToCache = [
   '/',
   '/auth.html',

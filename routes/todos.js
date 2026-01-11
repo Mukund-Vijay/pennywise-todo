@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database/db');
+const { db } = require('../database/mongodb');
 const { authenticateToken } = require('../middleware/auth');
 
 // Get all todos for user
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        const todos = db.prepare('SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC').all(req.userId);
+        const todos = await db.prepare('SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC').all(req.userId);
         res.json(todos);
     } catch (error) {
+        console.error('Fetch todos error:', error);
         res.status(500).json({ error: 'Failed to fetch todos' });
     }
 });
 
 // Create todo
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     try {
         const { text, scheduled_day } = req.body;
 
@@ -22,28 +23,29 @@ router.post('/', authenticateToken, (req, res) => {
             return res.status(400).json({ error: 'Text is required' });
         }
 
-        const result = db.prepare('INSERT INTO todos (user_id, text, scheduled_day) VALUES (?, ?, ?)').run(req.userId, text, scheduled_day !== undefined ? scheduled_day : null);
+        const result = await db.prepare('INSERT INTO todos (user_id, text, scheduled_day) VALUES (?, ?, ?)').run(req.userId, text, scheduled_day !== undefined ? scheduled_day : null);
 
-        const todo = db.prepare('SELECT * FROM todos WHERE id = ?').get(result.lastInsertRowid);
+        const todo = await db.prepare('SELECT * FROM todos WHERE id = ?').get(result.lastInsertRowid);
         res.status(201).json(todo);
     } catch (error) {
+        console.error('Create todo error:', error);
         res.status(500).json({ error: 'Failed to create todo' });
     }
 });
 
 // Update todo
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
     try {
         const { completed, text, scheduled_day, completed_date } = req.body;
         const { id } = req.params;
 
         // Verify ownership
-        const todo = db.prepare('SELECT * FROM todos WHERE id = ? AND user_id = ?').get(id, req.userId);
+        const todo = await db.prepare('SELECT * FROM todos WHERE id = ? AND user_id = ?').get(id, req.userId);
         if (!todo) {
             return res.status(404).json({ error: 'Todo not found' });
         }
 
-        db.prepare('UPDATE todos SET completed = ?, text = ?, scheduled_day = ?, completed_date = ? WHERE id = ?')
+        await db.prepare('UPDATE todos SET completed = ?, text = ?, scheduled_day = ?, completed_date = ? WHERE id = ?')
             .run(
                 completed !== undefined ? completed : todo.completed, 
                 text || todo.text, 
@@ -52,35 +54,37 @@ router.put('/:id', authenticateToken, (req, res) => {
                 id
             );
 
-        const updatedTodo = db.prepare('SELECT * FROM todos WHERE id = ?').get(id);
+        const updatedTodo = await db.prepare('SELECT * FROM todos WHERE id = ?').get(id);
         res.json(updatedTodo);
     } catch (error) {
+        console.error('Update todo error:', error);
         res.status(500).json({ error: 'Failed to update todo' });
     }
 });
 
 // Delete todo
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
 
         // Verify ownership
-        const todo = db.prepare('SELECT * FROM todos WHERE id = ? AND user_id = ?').get(id, req.userId);
+        const todo = await db.prepare('SELECT * FROM todos WHERE id = ? AND user_id = ?').get(id, req.userId);
         if (!todo) {
             return res.status(404).json({ error: 'Todo not found' });
         }
 
-        db.prepare('DELETE FROM todos WHERE id = ?').run(id);
+        await db.prepare('DELETE FROM todos WHERE id = ?').run(id);
         res.json({ message: 'Todo sent to the deadlights' });
     } catch (error) {
+        console.error('Delete todo error:', error);
         res.status(500).json({ error: 'Failed to delete todo' });
     }
 });
 
 // Get weekly summary
-router.get('/summary/weekly', authenticateToken, (req, res) => {
+router.get('/summary/weekly', authenticateToken, async (req, res) => {
     try {
-        const todos = db.prepare('SELECT * FROM todos WHERE user_id = ?').all(req.userId);
+        const todos = await db.prepare('SELECT * FROM todos WHERE user_id = ?').all(req.userId);
         
         // Calculate weekly stats
         const now = new Date();
@@ -102,21 +106,27 @@ router.get('/summary/weekly', authenticateToken, (req, res) => {
             6: { name: 'Saturday', scheduled: 0, completed: 0, onTime: 0 }
         };
         
+        let totalScheduled = 0;
+        let totalCompleted = 0;
+        let completedOnTime = 0;
+        
         todos.forEach(todo => {
-            if (todo.scheduled_day !== undefined && todo.scheduled_day !== null) {
-                const day = todo.scheduled_day;
+            if (todo.scheduled_day !== null && todo.scheduled_day !== undefined) {
+                const day = parseInt(todo.scheduled_day);
                 if (dayStats[day]) {
                     dayStats[day].scheduled++;
+                    totalScheduled++;
                     
                     if (todo.completed) {
                         dayStats[day].completed++;
+                        totalCompleted++;
                         
                         // Check if completed on the scheduled day
                         if (todo.completed_date) {
                             const completedDate = new Date(todo.completed_date);
-                            const completedDay = completedDate.getDay();
-                            if (completedDay === parseInt(day)) {
+                            if (completedDate.getDay() === day) {
                                 dayStats[day].onTime++;
+                                completedOnTime++;
                             }
                         }
                     }
@@ -124,48 +134,41 @@ router.get('/summary/weekly', authenticateToken, (req, res) => {
             }
         });
         
-        // Calculate most and least productive days
+        // Find most and least productive days
         let mostProductiveDay = null;
         let leastProductiveDay = null;
         let maxCompletion = -1;
-        let minCompletion = Infinity;
+        let minCompletion = 101;
         
         Object.entries(dayStats).forEach(([day, stats]) => {
             if (stats.scheduled > 0) {
-                const completionRate = stats.completed / stats.scheduled;
+                const completionRate = (stats.completed / stats.scheduled) * 100;
                 
                 if (completionRate > maxCompletion) {
                     maxCompletion = completionRate;
-                    mostProductiveDay = { day: stats.name, rate: completionRate, stats };
+                    mostProductiveDay = { ...stats, day: parseInt(day), completionRate };
                 }
                 
                 if (completionRate < minCompletion) {
                     minCompletion = completionRate;
-                    leastProductiveDay = { day: stats.name, rate: completionRate, stats };
+                    leastProductiveDay = { ...stats, day: parseInt(day), completionRate };
                 }
             }
         });
         
-        // Overall stats
-        const totalScheduled = Object.values(dayStats).reduce((sum, s) => sum + s.scheduled, 0);
-        const totalCompleted = Object.values(dayStats).reduce((sum, s) => sum + s.completed, 0);
-        const totalOnTime = Object.values(dayStats).reduce((sum, s) => sum + s.onTime, 0);
-        
         res.json({
             dayStats,
+            totalScheduled,
+            totalCompleted,
+            completedOnTime,
+            completionRate: totalScheduled > 0 ? Math.round((totalCompleted / totalScheduled) * 100) : 0,
+            onTimeRate: totalCompleted > 0 ? Math.round((completedOnTime / totalCompleted) * 100) : 0,
             mostProductiveDay,
-            leastProductiveDay,
-            overall: {
-                scheduled: totalScheduled,
-                completed: totalCompleted,
-                onTime: totalOnTime,
-                completionRate: totalScheduled > 0 ? (totalCompleted / totalScheduled) : 0,
-                onTimeRate: totalCompleted > 0 ? (totalOnTime / totalCompleted) : 0
-            }
+            leastProductiveDay
         });
     } catch (error) {
-        console.error('Summary error:', error);
-        res.status(500).json({ error: 'Failed to generate summary' });
+        console.error('Weekly summary error:', error);
+        res.status(500).json({ error: 'Failed to get summary' });
     }
 });
 

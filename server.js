@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const todoRoutes = require('./routes/todos');
-const db = require('./database/db');
+const { connectDB } = require('./database/mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,9 +41,6 @@ app.get('/manifest.json', (req, res) => {
     res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
-// Initialize database
-db.initialize();
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
@@ -57,7 +54,18 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`🎈 Pennywise Todo Server floating on port ${PORT}`);
-    console.log(`🤡 Open http://localhost:${PORT} to enter Derry...`);
-});
+// Start server with MongoDB connection
+async function startServer() {
+    try {
+        await connectDB();
+        app.listen(PORT, () => {
+            console.log(`🎈 Pennywise Todo Server floating on port ${PORT}`);
+            console.log(`🤡 Open http://localhost:${PORT} to enter Derry...`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+startServer();

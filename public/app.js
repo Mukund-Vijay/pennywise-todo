@@ -501,3 +501,4 @@ deleteAccountBtn.addEventListener('click', async () => {
     }
 });
 
+init();

@@ -253,20 +253,6 @@ function addTodo() {
     dayRadios.forEach(rb => rb.checked = false);
 }
 
-async function toggleTodo(id) {
-    const todo = todos.find(t => t.id === id);
-    const wasCompleted = Boolean(todo.completed);
-    await updateTodo(id, { completed: wasCompleted ? 0 : 1 });
-    if (!wasCompleted) {
-        playSound('balloonPop');
-        burstBalloon();
-    }
-}
-
-function handleDelete(id) {
-    deleteTodo(id);
-}
-
 async function clearCompletedTodos() {
     const completed = todos.filter(t => t.completed);
     if (completed.length === 0) return;

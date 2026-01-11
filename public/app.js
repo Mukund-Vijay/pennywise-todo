@@ -170,7 +170,8 @@ async function createTodo(text, scheduled_day) {
 
 async function updateTodo(id, updates) {
     try {
-        await fetch(`${API_URL}/todos/${id}`, {
+        console.log('Updating todo:', id, 'with updates:', updates);
+        const response = await fetch(`${API_URL}/todos/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -178,8 +179,26 @@ async function updateTodo(id, updates) {
             },
             body: JSON.stringify(updates)
         });
+        console.log('Update response status:', response.status);
+        const data = await response.json();
+        console.log('Updated todo:', data);
         await fetchTodos();
-    } catch (e) {}
+    } catch (e) {
+        console.error('Update error:', e);
+    }
+}
+
+async function toggleTodo(id) {
+    console.log('Toggling todo:', id);
+    const todo = todos.find(t => t.id === id);
+    console.log('Found todo:', todo);
+    const wasCompleted = Boolean(todo.completed);
+    console.log('Was completed:', wasCompleted, 'Setting to:', !wasCompleted);
+    await updateTodo(id, { completed: wasCompleted ? 0 : 1 });
+    if (!wasCompleted) {
+        playSound('balloonPop');
+        burstBalloon();
+    }
 }
 
 async function deleteTodo(id) {
@@ -194,6 +213,10 @@ async function deleteTodo(id) {
             playSound('click');
         }
     } catch (e) {}
+}
+
+function handleDelete(id) {
+    deleteTodo(id);
 }
 
 function init() {

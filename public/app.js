@@ -199,6 +199,10 @@ function handleDelete(id) {
     deleteTodo(id);
 }
 
+// Expose functions globally for inline event handlers
+window.toggleTodo = toggleTodo;
+window.handleDelete = handleDelete;
+
 function init() {
     console.log('Initializing app...');
     initAudio();

@@ -12,7 +12,7 @@ const urlsToCache = [
 
 // Install service worker
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Installing v4...');
+  console.log('[Service Worker] Installing v7...');
   self.skipWaiting(); // Force immediate activation
   event.waitUntil(
     caches.keys().then(cacheNames => {

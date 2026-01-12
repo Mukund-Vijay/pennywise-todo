@@ -4,32 +4,17 @@ let user = JSON.parse(localStorage.getItem('user') || '{}');
 let todos = [];
 let currentFilter = 'all';
 
-// Audio System
-const sounds = {
-    ambient: document.getElementById('ambientSound'),
-    jumpscare: document.getElementById('jumpscareSound'),
-    balloonPop: document.getElementById('balloonPopSound'),
-    click: document.getElementById('clickSound')
-};
+// Audio System - Disabled (audio files removed)
+const sounds = {};
 
 // Initialize audio
 let audioInitialized = false;
 function initAudio() {
-    if (!audioInitialized) {
-        if (sounds.ambient) sounds.ambient.volume = 0.2;
-        if (sounds.jumpscare) sounds.jumpscare.volume = 0.7;
-        if (sounds.balloonPop) sounds.balloonPop.volume = 0.5;
-        if (sounds.click) sounds.click.volume = 0.3;
-        if (sounds.ambient) sounds.ambient.play().catch(() => {});
-        audioInitialized = true;
-    }
+    audioInitialized = true;
 }
 
 function playSound(soundName) {
-    if (sounds[soundName]) {
-        sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(() => {});
-    }
+    // Audio disabled
 }
 
 // DOM Elements

@@ -328,9 +328,9 @@ function renderTodos() {
         dayTodos.forEach(todo => {
             const isCompleted = Boolean(todo.completed);
             html += `<li class="todo-item ${isCompleted?'completed':''}" data-id="${todo.id}">
-                <input type="checkbox" class="todo-checkbox" ${isCompleted?'checked':''} onchange="toggleTodo(${todo.id})">
+                <input type="checkbox" class="todo-checkbox" ${isCompleted?'checked':''} onchange="toggleTodo('${todo.id}')">
                 <span class="todo-text">${escapeHtml(todo.text)}</span>
-                <button class="delete-btn" onclick="handleDelete(${todo.id})">DELETE</button>
+                <button class="delete-btn" onclick="handleDelete('${todo.id}')">DELETE</button>
             </li>`;
         });
     });

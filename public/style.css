@@ -289,8 +289,12 @@ body::before {
 }
 
 .todo-item.completed .todo-text {
+    text-decoration: line-through;
+    color: #777;
+}
+
+.todo-item.completed span.todo-text {
     text-decoration: line-through !important;
-    color: #777 !important;
 }
 
 .todo-checkbox {
@@ -306,6 +310,7 @@ body::before {
     color: #fff;
     font-size: 1rem;
     min-width: 150px;
+    text-decoration: none;
 }
 
 .deadline-display {

@@ -186,7 +186,12 @@ function scheduleNotification(todo) {
 
 // Schedule all pending notifications
 function scheduleAllNotifications() {
+    console.log('📅 Scheduling all notifications...');
+    console.log('Total todos:', todos.length);
+    console.log('Notification permission:', notificationPermissionGranted);
+    
     todos.forEach(todo => {
+        console.log(`Todo: "${todo.text}" - Completed: ${todo.completed}, Start time: ${todo.start_time}`);
         if (!todo.completed && todo.start_time) {
             scheduleNotification(todo);
         }

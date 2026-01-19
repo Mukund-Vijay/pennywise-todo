@@ -133,37 +133,36 @@ function scheduleNotification(todo) {
         scheduledNotifications.delete(todo.id);
     }
     
-    // Parse the scheduled day and time
-    const now = new Date();
-    const scheduledDate = new Date(now);
+    // Use target_datetime if available, otherwise calculate from day + time
+    let scheduledDate;
     
-    // Set the scheduled day
-    const currentDay = now.getDay();
-    const targetDay = todo.scheduled_day;
-    let daysUntil = targetDay - currentDay;
-    if (daysUntil < 0) daysUntil += 7;
-    
-    // Parse time to check if it's passed today
-    const [taskHours, taskMinutes] = todo.start_time.split(':').map(Number);
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    const taskMinutesOfDay = taskHours * 60 + taskMinutes;
-    
-    // If same day but time has passed (including the 10-min reminder buffer), schedule for next week
-    if (daysUntil === 0 && nowMinutes >= (taskMinutesOfDay - 10)) {
-        daysUntil = 7;
-        console.log(`Time has passed today, scheduling for next ${getDayName(targetDay)}`);
+    if (todo.target_datetime) {
+        scheduledDate = new Date(todo.target_datetime);
+    } else {
+        // Fallback to old calculation if no target_datetime
+        const now = new Date();
+        scheduledDate = new Date(now);
+        
+        const currentDay = now.getDay();
+        const targetDay = todo.scheduled_day;
+        let daysUntil = targetDay - currentDay;
+        if (daysUntil < 0) daysUntil += 7;
+        
+        const [taskHours, taskMinutes] = todo.start_time.split(':').map(Number);
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const taskMinutesOfDay = taskHours * 60 + taskMinutes;
+        
+        if (daysUntil === 0 && nowMinutes >= (taskMinutesOfDay - 10)) {
+            daysUntil = 7;
+            console.log(`Time has passed today, scheduling for next ${getDayName(targetDay)}`);
+        }
+        
+        scheduledDate.setDate(now.getDate() + daysUntil);
+        scheduledDate.setHours(taskHours, taskMinutes, 0, 0);
     }
     
-    scheduledDate.setDate(now.getDate() + daysUntil);
-    
-    // Parse and set the time
-    const [hours, minutes] = todo.start_time.split(':').map(Number);
-    scheduledDate.setHours(hours, minutes, 0, 0);
-    
-    // Calculate reminder time (10 minutes before)
+    const now = new Date();
     const reminderTime = new Date(scheduledDate.getTime() - 10 * 60 * 1000);
-    
-    // Calculate time until reminder
     const timeUntilReminder = reminderTime.getTime() - now.getTime();
     
     // Only schedule if reminder is in the future
@@ -218,6 +217,40 @@ function scheduleAllNotifications() {
             scheduleNotification(todo);
         }
     });
+}
+
+// Poll backend for pending notifications
+async function checkBackendNotifications() {
+    try {
+        const res = await fetch(`${API_URL}/notifications`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            const notifications = await res.json();
+            
+            notifications.forEach(notification => {
+                if (notification.should_notify) {
+                    showBrowserNotification(
+                        '⏰ Task Reminder - 10 minutes!',
+                        `"${notification.text}" starts in 10 minutes! Time to float... with productivity!`,
+                        '🎈'
+                    );
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error checking backend notifications:', error);
+    }
+}
+
+// Start notification polling
+function startNotificationPolling() {
+    // Check immediately
+    checkBackendNotifications();
+    
+    // Then check every 30 seconds
+    setInterval(checkBackendNotifications, 30000);
 }
 
 // PWA Install
@@ -376,6 +409,11 @@ function init() {
     initAudio();
     requestNotificationPermission(); // Request notification permission on init
     fetchTodos();
+    
+    // Start backend notification polling
+    if (notificationPermissionGranted) {
+        startNotificationPolling();
+    }
     
     console.log('Setting up event listeners...');
     console.log('Add button:', addBtn);

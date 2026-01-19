@@ -5,7 +5,9 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const todoRoutes = require('./routes/todos');
+const notificationRoutes = require('./routes/notifications');
 const { connectDB } = require('./database/mongodb');
+const notificationScheduler = require('./utils/notificationScheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +46,7 @@ app.get('/manifest.json', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Serve frontend
 app.get('/', (req, res) => {
@@ -61,11 +64,27 @@ async function startServer() {
         app.listen(PORT, () => {
             console.log(`🎈 Pennywise Todo Server floating on port ${PORT}`);
             console.log(`🤡 Open http://localhost:${PORT} to enter Derry...`);
+            
+            // Start notification scheduler
+            notificationScheduler.start();
         });
     } catch (error) {
         console.error('Failed to start server:', error);
         process.exit(1);
     }
 }
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully...');
+    notificationScheduler.stop();
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('SIGINT received, shutting down gracefully...');
+    notificationScheduler.stop();
+    process.exit(0);
+});
 
 startServer();

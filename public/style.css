@@ -285,16 +285,17 @@ body::before {
 
 .todo-item.completed {
     opacity: 0.6;
-    border-left-color: #666;
+    border-left-color: #666 !important;
 }
 
 .todo-item.completed .todo-text {
-    text-decoration: line-through;
-    color: #777;
+    text-decoration: line-through !important;
+    color: #777 !important;
 }
 
-.todo-item.completed span.todo-text {
+li.todo-item.completed span.todo-text {
     text-decoration: line-through !important;
+    color: #777 !important;
 }
 
 .todo-checkbox {

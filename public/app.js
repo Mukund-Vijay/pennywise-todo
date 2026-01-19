@@ -37,6 +37,7 @@ const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 const enableTimeCheckbox = document.getElementById('enableTimeCheckbox');
 const timeInputWrapper = document.getElementById('timeInputWrapper');
 const todoTime = document.getElementById('todoTime');
+const testNotificationBtn = document.getElementById('testNotificationBtn');
 
 // Notification permission state
 let notificationPermissionGranted = false;
@@ -70,6 +71,8 @@ async function requestNotificationPermission() {
         if (notificationPermissionGranted) {
             showNotification('🔔 Notifications enabled! You\'ll get reminders 10 minutes before tasks.');
             console.log('Notification permission granted');
+            // Show test button
+            if (testNotificationBtn) testNotificationBtn.style.display = 'inline-block';
         } else {
             console.warn('Notification permission denied');
             showNotification('⚠️ Notifications blocked. Enable them in browser settings for reminders.');
@@ -113,7 +116,15 @@ function showBrowserNotification(title, body, icon = '🎈') {
 
 // Schedule notification for a task
 function scheduleNotification(todo) {
-    if (!todo.start_time || !notificationPermissionGranted) return;
+    if (!todo.start_time) {
+        console.log(`No start time for todo ${todo.id}`);
+        return;
+    }
+    
+    if (!notificationPermissionGranted) {
+        console.log('Notification permission not granted');
+        return;
+    }
     
     // Cancel existing notification for this todo if any
     if (scheduledNotifications.has(todo.id)) {
@@ -130,8 +141,16 @@ function scheduleNotification(todo) {
     const targetDay = todo.scheduled_day;
     let daysUntil = targetDay - currentDay;
     if (daysUntil < 0) daysUntil += 7;
-    if (daysUntil === 0 && now.getHours() * 60 + now.getMinutes() > parseInt(todo.start_time.split(':')[0]) * 60 + parseInt(todo.start_time.split(':')[1])) {
-        daysUntil = 7; // If today's time has passed, schedule for next week
+    
+    // Parse time to check if it's passed today
+    const [taskHours, taskMinutes] = todo.start_time.split(':').map(Number);
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const taskMinutesOfDay = taskHours * 60 + taskMinutes;
+    
+    // If same day but time has passed (including the 10-min reminder buffer), schedule for next week
+    if (daysUntil === 0 && nowMinutes >= (taskMinutesOfDay - 10)) {
+        daysUntil = 7;
+        console.log(`Time has passed today, scheduling for next ${getDayName(targetDay)}`);
     }
     
     scheduledDate.setDate(now.getDate() + daysUntil);
@@ -357,6 +376,18 @@ function init() {
             currentFilter = btn.dataset.filter;
             renderTodos();
         });
+    
+    // Test notification button
+    if (testNotificationBtn) {
+        testNotificationBtn.addEventListener('click', () => {
+            if (notificationPermissionGranted) {
+                showBrowserNotification('🎈 Test Notification', 'This is how your reminders will look!', '🎈');
+                showNotification('Test notification sent!');
+            } else {
+                showNotification('Please enable notifications first!');
+            }
+        });
+    }
     });
     console.log('Event listeners set up successfully');
 }
@@ -514,6 +545,11 @@ function formatTime(time) {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+}
+
+function getDayName(day) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[day];
 }
 
 function formatScheduledDay(day) {

@@ -87,6 +87,7 @@ const db_interface = {
                             text: params[1],
                             completed: 0,
                             scheduled_day: params[2] !== undefined ? params[2] : null,
+                            start_time: params[3] || null,
                             completed_date: null,
                             created_at: new Date().toISOString()
                         });
@@ -94,20 +95,19 @@ const db_interface = {
                     }
                     
                     if (query.includes('UPDATE todos')) {
-                        const todoId = params[4];
+                        const todoId = params[5]; // ID is now at index 5
                         const updateData = {
                             completed: params[0],
                             text: params[1],
-                            scheduled_day: params[2]
+                            scheduled_day: params[2],
+                            start_time: params[4] !== undefined ? params[4] : null
                         };
                         
-                        if (params[0] === 1) {
+                        if (params[0] === 1 && !params[3]) {
                             updateData.completed_date = new Date().toISOString();
                         } else if (params[0] === 0) {
                             updateData.completed_date = null;
-                        }
-                        
-                        if (params[3]) {
+                        } else if (params[3]) {
                             updateData.completed_date = params[3];
                         }
                         

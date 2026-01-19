@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database/mongodb');
+// Use JSON file database for local development
+const { db } = process.env.MONGODB_URI ? require('../database/mongodb') : require('../database/db');
 const { authenticateToken } = require('../middleware/auth');
 
 // Get all todos for user

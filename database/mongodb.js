@@ -7,7 +7,14 @@ let todosCollection;
 
 async function connectDB() {
     try {
-        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/pennywise-todo';
+        const uri = process.env.MONGODB_URI;
+        
+        // If no MongoDB URI provided, skip MongoDB connection (use JSON file instead)
+        if (!uri || uri === 'mongodb://localhost:27017/pennywise-todo') {
+            console.log('⚠️  No MongoDB URI provided - using JSON file storage');
+            return;
+        }
+        
         client = new MongoClient(uri);
         await client.connect();
         db = client.db('pennywise-todo');
@@ -21,8 +28,8 @@ async function connectDB() {
         
         console.log('🎪 MongoDB connected successfully');
     } catch (error) {
-        console.error('MongoDB connection error:', error);
-        throw error;
+        console.error('⚠️  MongoDB connection error - falling back to JSON storage:', error.message);
+        // Don't throw - allow fallback to JSON storage
     }
 }
 

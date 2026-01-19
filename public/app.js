@@ -161,7 +161,14 @@ function scheduleNotification(todo) {
     
     // Calculate reminder time (10 minutes before)
     const reminderTime = new Date(scheduledDate.getTime() - 10 * 60 * 1000);
-    console.log('Triggering notification for todo:', todo.id);
+    
+    // Calculate time until reminder
+    const timeUntilReminder = reminderTime.getTime() - now.getTime();
+    
+    // Only schedule if reminder is in the future
+    if (timeUntilReminder > 0) {
+        const timeoutId = setTimeout(() => {
+            console.log('Triggering notification for todo:', todo.id);
             showBrowserNotification(
                 '⏰ Task Reminder - 10 minutes!',
                 `"${todo.text}" starts in 10 minutes! Time to float... with productivity!`,
@@ -173,14 +180,7 @@ function scheduleNotification(todo) {
         scheduledNotifications.set(todo.id, timeoutId);
         console.log(`✅ Scheduled notification for "${todo.text}" at ${reminderTime.toLocaleString()} (in ${Math.round(timeUntilReminder/1000/60)} minutes)`);
     } else {
-        console.log(`⏭️ Skipping past notification for "${todo.text}" (was ${Math.abs(Math.round(timeUntilReminder/1000/60))} minutes ago)
-                '🎈'
-            );
-            scheduledNotifications.delete(todo.id);
-        }, timeUntilReminder);
-        
-        scheduledNotifications.set(todo.id, timeoutId);
-        console.log(`Scheduled notification for todo ${todo.id} at ${reminderTime.toLocaleString()}`);
+        console.log(`⏭️ Skipping past notification for "${todo.text}" (was ${Math.abs(Math.round(timeUntilReminder/1000/60))} minutes ago)`);
     }
 }
 

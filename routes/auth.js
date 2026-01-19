@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { db } = require('../database/mongodb');
+// Use JSON file database for local development
+const { db } = process.env.MONGODB_URI ? require('../database/mongodb') : require('../database/db');
 
 // Register
 router.post('/register', async (req, res) => {

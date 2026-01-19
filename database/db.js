@@ -87,18 +87,20 @@ const db = {
                         text: params[1],
                         completed: 0,
                         scheduled_day: params[2] !== undefined ? params[2] : null,
+                        start_time: params[3] || null,
                         completed_date: null,
                         created_at: new Date().toISOString()
                     });
                 } else if (query.includes('UPDATE todos')) {
                     console.log('UPDATE todos - params:', params);
-                    const todoIndex = data.todos.findIndex(t => t.id === parseInt(params[4]));
+                    const todoIndex = data.todos.findIndex(t => t.id === parseInt(params[5]));
                     console.log('Found todo at index:', todoIndex);
                     if (todoIndex !== -1) {
                         console.log('Before update:', JSON.stringify(data.todos[todoIndex]));
                         data.todos[todoIndex].completed = params[0];
                         data.todos[todoIndex].text = params[1];
                         data.todos[todoIndex].scheduled_day = params[2];
+                        data.todos[todoIndex].start_time = params[4] !== undefined ? params[4] : data.todos[todoIndex].start_time;
                         if (params[0] === 1 && !data.todos[todoIndex].completed_date) {
                             data.todos[todoIndex].completed_date = new Date().toISOString();
                         } else if (params[0] === 0) {

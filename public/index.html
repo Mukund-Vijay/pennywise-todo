@@ -43,6 +43,17 @@
                 </div>
             </div>
 
+            <div class="time-selector" id="timeSelector">
+                <label class="time-label">
+                    <input type="checkbox" id="enableTimeCheckbox" class="enable-time-checkbox">
+                    <span>Set start time (optional)</span>
+                </label>
+                <div class="time-input-wrapper" id="timeInputWrapper" style="display: none;">
+                    <input type="time" id="todoTime" class="time-input">
+                    <span class="reminder-note">⏰ You'll get a reminder 10 minutes before</span>
+                </div>
+            </div>
+
             <div class="filters">
                 <button class="filter-btn active" data-filter="all">All</button>
                 <button class="filter-btn" data-filter="active">Active</button>

@@ -17,13 +17,18 @@ router.get('/', authenticateToken, async (req, res) => {
 // Create todo
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const { text, scheduled_day } = req.body;
+        const { text, scheduled_day, start_time } = req.body;
 
         if (!text) {
             return res.status(400).json({ error: 'Text is required' });
         }
 
-        const result = await db.prepare('INSERT INTO todos (user_id, text, scheduled_day) VALUES (?, ?, ?)').run(req.userId, text, scheduled_day !== undefined ? scheduled_day : null);
+        const result = await db.prepare('INSERT INTO todos (user_id, text, scheduled_day, start_time) VALUES (?, ?, ?, ?)').run(
+            req.userId, 
+            text, 
+            scheduled_day !== undefined ? scheduled_day : null,
+            start_time || null
+        );
 
         const todo = await db.prepare('SELECT * FROM todos WHERE id = ?').get(result.lastInsertRowid);
         res.status(201).json(todo);
@@ -36,7 +41,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // Update todo
 router.put('/:id', authenticateToken, async (req, res) => {
     try {
-        const { completed, text, scheduled_day, completed_date } = req.body;
+        const { completed, text, scheduled_day, completed_date, start_time } = req.body;
         const { id } = req.params;
 
         // Verify ownership
@@ -45,12 +50,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Todo not found' });
         }
 
-        await db.prepare('UPDATE todos SET completed = ?, text = ?, scheduled_day = ?, completed_date = ? WHERE id = ?')
+        await db.prepare('UPDATE todos SET completed = ?, text = ?, scheduled_day = ?, completed_date = ?, start_time = ? WHERE id = ?')
             .run(
                 completed !== undefined ? completed : todo.completed, 
                 text || todo.text, 
                 scheduled_day !== undefined ? scheduled_day : todo.scheduled_day,
                 completed_date !== undefined ? completed_date : todo.completed_date,
+                start_time !== undefined ? start_time : todo.start_time,
                 id
             );
 

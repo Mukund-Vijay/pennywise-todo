@@ -34,6 +34,13 @@ const closeSummary = document.getElementById('closeSummary');
 const dayRadios = document.querySelectorAll('.day-checkbox input[type="radio"]');
 const logoutBtn = document.getElementById('logoutBtn');
 const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+const enableTimeCheckbox = document.getElementById('enableTimeCheckbox');
+const timeInputWrapper = document.getElementById('timeInputWrapper');
+const todoTime = document.getElementById('todoTime');
+
+// Notification permission state
+let notificationPermissionGranted = false;
+let scheduledNotifications = new Map(); // Store timeout IDs for scheduled notifications
 
 balloonCanvas.width = window.innerWidth;
 balloonCanvas.height = window.innerHeight;
@@ -44,6 +51,104 @@ window.addEventListener('resize', () => {
 
 // Check auth
 if (!token) window.location.href = '/auth.html';
+
+// Request notification permission
+async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        notificationPermissionGranted = permission === 'granted';
+        if (notificationPermissionGranted) {
+            showNotification('Notifications enabled! You\'ll get reminders 10 minutes before tasks.');
+        }
+    } else if (Notification.permission === 'granted') {
+        notificationPermissionGranted = true;
+    }
+}
+
+// Show browser notification
+function showBrowserNotification(title, body, icon = '🎈') {
+    if (!notificationPermissionGranted || !('Notification' in window)) return;
+    
+    try {
+        const notification = new Notification(title, {
+            body: body,
+            icon: '/icon-192x192.png',
+            badge: '/icon-192x192.png',
+            tag: 'pennywise-reminder',
+            requireInteraction: false,
+            silent: false
+        });
+        
+        playSound('click');
+        
+        notification.onclick = () => {
+            window.focus();
+            notification.close();
+        };
+    } catch (error) {
+        console.error('Notification error:', error);
+    }
+}
+
+// Schedule notification for a task
+function scheduleNotification(todo) {
+    if (!todo.start_time || !notificationPermissionGranted) return;
+    
+    // Cancel existing notification for this todo if any
+    if (scheduledNotifications.has(todo.id)) {
+        clearTimeout(scheduledNotifications.get(todo.id));
+        scheduledNotifications.delete(todo.id);
+    }
+    
+    // Parse the scheduled day and time
+    const now = new Date();
+    const scheduledDate = new Date(now);
+    
+    // Set the scheduled day
+    const currentDay = now.getDay();
+    const targetDay = todo.scheduled_day;
+    let daysUntil = targetDay - currentDay;
+    if (daysUntil < 0) daysUntil += 7;
+    if (daysUntil === 0 && now.getHours() * 60 + now.getMinutes() > parseInt(todo.start_time.split(':')[0]) * 60 + parseInt(todo.start_time.split(':')[1])) {
+        daysUntil = 7; // If today's time has passed, schedule for next week
+    }
+    
+    scheduledDate.setDate(now.getDate() + daysUntil);
+    
+    // Parse and set the time
+    const [hours, minutes] = todo.start_time.split(':').map(Number);
+    scheduledDate.setHours(hours, minutes, 0, 0);
+    
+    // Calculate reminder time (10 minutes before)
+    const reminderTime = new Date(scheduledDate.getTime() - 10 * 60 * 1000);
+    
+    // Calculate time until reminder
+    const timeUntilReminder = reminderTime.getTime() - now.getTime();
+    
+    // Only schedule if reminder is in the future
+    if (timeUntilReminder > 0) {
+        const timeoutId = setTimeout(() => {
+            showBrowserNotification(
+                '⏰ Task Reminder - 10 minutes!',
+                `"${todo.text}" starts in 10 minutes! Time to float... with productivity!`,
+                '🎈'
+            );
+            scheduledNotifications.delete(todo.id);
+        }, timeUntilReminder);
+        
+        scheduledNotifications.set(todo.id, timeoutId);
+        console.log(`Scheduled notification for todo ${todo.id} at ${reminderTime.toLocaleString()}`);
+    }
+}
+
+// Schedule all pending notifications
+function scheduleAllNotifications() {
+    todos.forEach(todo => {
+        if (!todo.completed && todo.start_time) {
+            scheduleNotification(todo);
+        }
+    });
+}
 
 // PWA Install
 let deferredPrompt;
@@ -99,22 +204,23 @@ async function fetchTodos() {
         console.log('Fetched todos:', todos);
         renderTodos();
         updateCount();
+        scheduleAllNotifications(); // Schedule notifications for all pending tasks
     } catch (e) {
         console.error('Error fetching todos:', e);
         showNotification('Failed to load tasks');
     }
 }
 
-async function createTodo(text, scheduled_day) {
+async function createTodo(text, scheduled_day, start_time = null) {
     try {
-        console.log('Creating todo:', text, 'Day:', scheduled_day);
+        console.log('Creating todo:', text, 'Day:', scheduled_day, 'Time:', start_time);
         const res = await fetch(`${API_URL}/todos`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ text, scheduled_day })
+            body: JSON.stringify({ text, scheduled_day, start_time })
         });
         console.log('Response status:', res.status);
         const responseData = await res.json();
@@ -191,6 +297,7 @@ window.handleDelete = handleDelete;
 function init() {
     console.log('Initializing app...');
     initAudio();
+    requestNotificationPermission(); // Request notification permission on init
     fetchTodos();
     
     console.log('Setting up event listeners...');
@@ -199,6 +306,17 @@ function init() {
     todoInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') addTodo();
     });
+    
+    // Toggle time input visibility
+    enableTimeCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            timeInputWrapper.style.display = 'block';
+        } else {
+            timeInputWrapper.style.display = 'none';
+            todoTime.value = '';
+        }
+    });
+    
     clearCompleted.addEventListener('click', clearCompletedTodos);
     closeJumpscare.addEventListener('click', () => {
         jumpscareModal.classList.remove('show');
@@ -224,8 +342,9 @@ function addTodo() {
     initAudio();
     const text = todoInput.value.trim();
     const selectedDay = document.querySelector('.day-checkbox input[type="radio"]:checked');
+    const startTime = enableTimeCheckbox.checked ? todoTime.value : null;
     
-    console.log('Text:', text, 'Selected Day:', selectedDay?.value);
+    console.log('Text:', text, 'Selected Day:', selectedDay?.value, 'Start Time:', startTime);
     if (!text) {
         console.log('No text, returning');
         showNotification('Please enter a task');
@@ -237,9 +356,12 @@ function addTodo() {
     }
     
     const scheduled_day = parseInt(selectedDay.value);
-    createTodo(text, scheduled_day);
+    createTodo(text, scheduled_day, startTime);
     todoInput.value = '';
     dayRadios.forEach(rb => rb.checked = false);
+    enableTimeCheckbox.checked = false;
+    timeInputWrapper.style.display = 'none';
+    todoTime.value = '';
 }
 
 async function clearCompletedTodos() {
@@ -327,9 +449,11 @@ function renderTodos() {
         
         dayTodos.forEach(todo => {
             const isCompleted = Boolean(todo.completed);
+            const timeDisplay = todo.start_time ? `<span class="todo-time">⏰ ${formatTime(todo.start_time)}</span>` : '';
             html += `<li class="todo-item ${isCompleted?'completed':''}" data-id="${todo.id}">
                 <input type="checkbox" class="todo-checkbox" ${isCompleted?'checked':''} onchange="toggleTodo('${todo.id}')">
                 <span class="todo-text">${escapeHtml(todo.text)}</span>
+                ${timeDisplay}
                 <button class="delete-btn" onclick="handleDelete('${todo.id}')">DELETE</button>
             </li>`;
         });
@@ -357,6 +481,15 @@ function showNotification(message) {
 function escapeHtml(text) {
     const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
     return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function formatTime(time) {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
 }
 
 function formatScheduledDay(day) {

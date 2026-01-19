@@ -54,29 +54,47 @@ if (!token) window.location.href = '/auth.html';
 
 // Request notification permission
 async function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if (!('Notification' in window)) {
+        console.warn('This browser does not support notifications');
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        notificationPermissionGranted = true;
+        console.log('Notification permission already granted');
+    } else if (Notification.permission === 'default') {
+        console.log('Requesting notification permission...');
         const permission = await Notification.requestPermission();
         notificationPermissionGranted = permission === 'granted';
+        
         if (notificationPermissionGranted) {
-            showNotification('Notifications enabled! You\'ll get reminders 10 minutes before tasks.');
+            showNotification('🔔 Notifications enabled! You\'ll get reminders 10 minutes before tasks.');
+            console.log('Notification permission granted');
+        } else {
+            console.warn('Notification permission denied');
+            showNotification('⚠️ Notifications blocked. Enable them in browser settings for reminders.');
         }
-    } else if (Notification.permission === 'granted') {
-        notificationPermissionGranted = true;
+    } else {
+        console.warn('Notification permission denied');
     }
 }
 
 // Show browser notification
 function showBrowserNotification(title, body, icon = '🎈') {
-    if (!notificationPermissionGranted || !('Notification' in window)) return;
+    if (!notificationPermissionGranted || !('Notification' in window)) {
+        console.log('Cannot show notification - permission not granted');
+        return;
+    }
     
     try {
+        console.log('Showing notification:', title);
         const notification = new Notification(title, {
             body: body,
-            icon: '/icon-192x192.png',
-            badge: '/icon-192x192.png',
+            icon: icon,
             tag: 'pennywise-reminder',
-            requireInteraction: false,
-            silent: false
+            requireInteraction: true,
+            silent: false,
+            vibrate: [200, 100, 200]
         });
         
         playSound('click');
@@ -85,6 +103,9 @@ function showBrowserNotification(title, body, icon = '🎈') {
             window.focus();
             notification.close();
         };
+        
+        // Auto close after 30 seconds
+        setTimeout(() => notification.close(), 30000);
     } catch (error) {
         console.error('Notification error:', error);
     }
@@ -121,16 +142,19 @@ function scheduleNotification(todo) {
     
     // Calculate reminder time (10 minutes before)
     const reminderTime = new Date(scheduledDate.getTime() - 10 * 60 * 1000);
-    
-    // Calculate time until reminder
-    const timeUntilReminder = reminderTime.getTime() - now.getTime();
-    
-    // Only schedule if reminder is in the future
-    if (timeUntilReminder > 0) {
-        const timeoutId = setTimeout(() => {
+    console.log('Triggering notification for todo:', todo.id);
             showBrowserNotification(
                 '⏰ Task Reminder - 10 minutes!',
                 `"${todo.text}" starts in 10 minutes! Time to float... with productivity!`,
+                '🎈'
+            );
+            scheduledNotifications.delete(todo.id);
+        }, timeUntilReminder);
+        
+        scheduledNotifications.set(todo.id, timeoutId);
+        console.log(`✅ Scheduled notification for "${todo.text}" at ${reminderTime.toLocaleString()} (in ${Math.round(timeUntilReminder/1000/60)} minutes)`);
+    } else {
+        console.log(`⏭️ Skipping past notification for "${todo.text}" (was ${Math.abs(Math.round(timeUntilReminder/1000/60))} minutes ago)
                 '🎈'
             );
             scheduledNotifications.delete(todo.id);

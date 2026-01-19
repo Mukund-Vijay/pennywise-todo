@@ -167,6 +167,26 @@ function scheduleNotification(todo) {
     
     // Only schedule if reminder is in the future
     if (timeUntilReminder > 0) {
+        const maxTimeout = 2147483647; // Maximum setTimeout value (~24.8 days)
+        
+        // If too far in the future, warn user
+        if (timeUntilReminder > maxTimeout) {
+            console.log(`⚠️ Notification for "${todo.text}" is too far in the future. Will schedule closer to the date.`);
+            // Store for later rescheduling
+            localStorage.setItem(`notification_${todo.id}`, JSON.stringify({
+                todoId: todo.id,
+                text: todo.text,
+                reminderTime: reminderTime.toISOString()
+            }));
+            return;
+        }
+        
+        // Warn if more than 24 hours away
+        const hoursUntil = Math.round(timeUntilReminder / 1000 / 60 / 60);
+        if (hoursUntil > 24) {
+            console.log(`⏰ Note: Notification for "${todo.text}" is ${hoursUntil} hours away. Keep browser/app open or return closer to the time.`);
+        }
+        
         const timeoutId = setTimeout(() => {
             console.log('Triggering notification for todo:', todo.id);
             showBrowserNotification(
@@ -175,6 +195,7 @@ function scheduleNotification(todo) {
                 '🎈'
             );
             scheduledNotifications.delete(todo.id);
+            localStorage.removeItem(`notification_${todo.id}`);
         }, timeUntilReminder);
         
         scheduledNotifications.set(todo.id, timeoutId);

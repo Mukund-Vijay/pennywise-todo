@@ -18,17 +18,19 @@ router.get('/', authenticateToken, async (req, res) => {
 // Create todo
 router.post('/', authenticateToken, async (req, res) => {
     try {
-        const { text, scheduled_day, start_time } = req.body;
+        const { text, scheduled_day, start_time, target_date, target_datetime } = req.body;
 
         if (!text) {
             return res.status(400).json({ error: 'Text is required' });
         }
 
-        const result = await db.prepare('INSERT INTO todos (user_id, text, scheduled_day, start_time) VALUES (?, ?, ?, ?)').run(
+        const result = await db.prepare('INSERT INTO todos (user_id, text, scheduled_day, start_time, target_date, target_datetime) VALUES (?, ?, ?, ?, ?, ?)').run(
             req.userId, 
             text, 
             scheduled_day !== undefined ? scheduled_day : null,
-            start_time || null
+            start_time || null,
+            target_date || null,
+            target_datetime || null
         );
 
         const todo = await db.prepare('SELECT * FROM todos WHERE id = ?').get(result.lastInsertRowid);

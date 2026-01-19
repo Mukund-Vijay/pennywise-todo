@@ -707,6 +707,39 @@ li.todo-item.completed span.todo-text {
     font-weight: 500;
 }
 
+.date-input-wrapper {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.date-label {
+    display: block;
+    color: #ff6666;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.date-input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    background: rgba(40, 40, 40, 0.8);
+    border: 2px solid #660000;
+    border-radius: 8px;
+    color: #fff;
+    outline: none;
+    transition: all 0.3s ease;
+    color-scheme: dark;
+    font-family: 'Roboto', sans-serif;
+}
+
+.date-input:focus {
+    border-color: #ff0000;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+}
+
 .days-wrapper {
     display: flex;
     gap: 8px;

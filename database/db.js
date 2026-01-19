@@ -88,6 +88,8 @@ const db = {
                         completed: 0,
                         scheduled_day: params[2] !== undefined ? params[2] : null,
                         start_time: params[3] || null,
+                        target_date: params[4] || null,
+                        target_datetime: params[5] || null,
                         completed_date: null,
                         created_at: new Date().toISOString()
                     });

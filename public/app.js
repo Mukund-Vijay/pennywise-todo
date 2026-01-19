@@ -38,6 +38,7 @@ const enableTimeCheckbox = document.getElementById('enableTimeCheckbox');
 const timeInputWrapper = document.getElementById('timeInputWrapper');
 const todoTime = document.getElementById('todoTime');
 const testNotificationBtn = document.getElementById('testNotificationBtn');
+const todoDate = document.getElementById('todoDate');
 
 // Notification permission state
 let notificationPermissionGranted = false;
@@ -280,16 +281,23 @@ async function fetchTodos() {
     }
 }
 
-async function createTodo(text, scheduled_day, start_time = null) {
+async function createTodo(text, scheduled_day, start_time = null, target_date = null) {
     try {
-        console.log('Creating todo:', text, 'Day:', scheduled_day, 'Time:', start_time);
+        console.log('Creating todo:', text, 'Day:', scheduled_day, 'Time:', start_time, 'Date:', target_date);
+        
+        // Calculate target_datetime if both date and time are provided
+        let target_datetime = null;
+        if (target_date && start_time) {
+            target_datetime = `${target_date}T${start_time}:00`;
+        }
+        
         const res = await fetch(`${API_URL}/todos`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ text, scheduled_day, start_time })
+            body: JSON.stringify({ text, scheduled_day, start_time, target_date, target_datetime })
         });
         console.log('Response status:', res.status);
         const responseData = await res.json();
@@ -424,25 +432,27 @@ function addTodo() {
     const text = todoInput.value.trim();
     const selectedDay = document.querySelector('.day-checkbox input[type="radio"]:checked');
     const startTime = enableTimeCheckbox.checked ? todoTime.value : null;
+    const targetDate = todoDate.value || null;
     
-    console.log('Text:', text, 'Selected Day:', selectedDay?.value, 'Start Time:', startTime);
+    console.log('Text:', text, 'Selected Day:', selectedDay?.value, 'Start Time:', startTime, 'Date:', targetDate);
     if (!text) {
         console.log('No text, returning');
         showNotification('Please enter a task');
         return;
     }
-    if (!selectedDay) {
-        showNotification('Please select a day');
+    if (!selectedDay && !targetDate) {
+        showNotification('Please select a day or date');
         return;
     }
     
-    const scheduled_day = parseInt(selectedDay.value);
-    createTodo(text, scheduled_day, startTime);
+    const scheduled_day = selectedDay ? parseInt(selectedDay.value) : null;
+    createTodo(text, scheduled_day, startTime, targetDate);
     todoInput.value = '';
     dayRadios.forEach(rb => rb.checked = false);
     enableTimeCheckbox.checked = false;
     timeInputWrapper.style.display = 'none';
     todoTime.value = '';
+    todoDate.value = '';
 }
 
 async function clearCompletedTodos() {
@@ -500,35 +510,69 @@ function renderTodos() {
         return;
     }
     
-    // Group todos by day
+    // Group todos by date (if they have target_date) or by day (if they don't)
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const groupedByDay = {};
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const groupedByDate = {};
     
     filtered.forEach(todo => {
-        const day = todo.scheduled_day !== undefined ? todo.scheduled_day : -1;
-        if (!groupedByDay[day]) groupedByDay[day] = [];
-        groupedByDay[day].push(todo);
+        let groupKey;
+        if (todo.target_date) {
+            groupKey = todo.target_date; // Group by actual date: "2026-01-26"
+        } else if (todo.scheduled_day !== undefined) {
+            groupKey = `day_${todo.scheduled_day}`; // Group by day of week
+        } else {
+            groupKey = 'unscheduled';
+        }
+        
+        if (!groupedByDate[groupKey]) groupedByDate[groupKey] = [];
+        groupedByDate[groupKey].push(todo);
+    });
+    
+    // Sort groups by date
+    const sortedGroups = Object.keys(groupedByDate).sort((a, b) => {
+        if (a.startsWith('day_')) return 1;
+        if (b.startsWith('day_')) return -1;
+        if (a === 'unscheduled') return 1;
+        if (b === 'unscheduled') return -1;
+        return new Date(a) - new Date(b);
     });
     
     let html = '';
-    const today = new Date().getDay();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    // Render each day's tasks
-    Object.keys(groupedByDay).sort((a, b) => parseInt(a) - parseInt(b)).forEach(day => {
-        const dayNum = parseInt(day);
-        if (dayNum === -1) return; // Skip unscheduled
+    // Render each group
+    sortedGroups.forEach(groupKey => {
+        if (groupKey === 'unscheduled') return;
         
-        const isToday = dayNum === today;
-        const dayTodos = groupedByDay[day];
+        const groupTodos = groupedByDate[groupKey];
+        let headerText = '';
+        let isToday = false;
+        
+        if (groupKey.startsWith('day_')) {
+            // Day-based group (no specific date)
+            const dayNum = parseInt(groupKey.replace('day_', ''));
+            headerText = dayNames[dayNum];
+            isToday = dayNum === today.getDay();
+        } else {
+            // Date-based group
+            const taskDate = new Date(groupKey + 'T00:00:00');
+            const dayName = dayNames[taskDate.getDay()];
+            const monthName = monthNames[taskDate.getMonth()];
+            const dayOfMonth = taskDate.getDate();
+            headerText = `${dayName}, ${monthName} ${dayOfMonth}`;
+            isToday = taskDate.getTime() === today.getTime();
+        }
         
         html += `<li class="day-separator ${isToday?'today-day':''}">
             <div class="day-header">
-                <span class="day-name">${dayNames[dayNum]}</span>
-                <span class="day-count">${dayTodos.length} task${dayTodos.length !== 1 ? 's' : ''}</span>
+                <span class="day-name">${headerText}</span>
+                <span class="day-count">${groupTodos.length} task${groupTodos.length !== 1 ? 's' : ''}</span>
             </div>
         </li>`;
         
-        dayTodos.forEach(todo => {
+        groupTodos.forEach(todo => {
             const isCompleted = Boolean(todo.completed);
             const timeDisplay = todo.start_time ? `<span class="todo-time">⏰ ${formatTime(todo.start_time)}</span>` : '';
             html += `<li class="todo-item ${isCompleted?'completed':''}" data-id="${todo.id}">
@@ -538,6 +582,7 @@ function renderTodos() {
                 <button class="delete-btn" onclick="handleDelete('${todo.id}')">DELETE</button>
             </li>`;
         });
+    });
     });
     
     todoList.innerHTML = html || `<li style="text-align:center;padding:40px;color:#666;"><p style="font-size:1.2rem;">No tasks...</p></li>`;

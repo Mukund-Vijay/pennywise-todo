@@ -1,3 +1,4 @@
+// Version: 1.0.1 - Fixed notification system
 const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 let token = localStorage.getItem('token');
 let user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -74,6 +75,10 @@ async function requestNotificationPermission() {
             console.log('Notification permission granted');
             // Show test button
             if (testNotificationBtn) testNotificationBtn.style.display = 'inline-block';
+            // Reschedule all existing notifications now that permission is granted
+            scheduleAllNotifications();
+            // Start backend polling
+            startNotificationPolling();
         } else {
             console.warn('Notification permission denied');
             showNotification('⚠️ Notifications blocked. Enable them in browser settings for reminders.');
@@ -85,13 +90,19 @@ async function requestNotificationPermission() {
 
 // Show browser notification
 function showBrowserNotification(title, body, icon = '🎈') {
+    console.log('🔔 showBrowserNotification called');
+    console.log('  Title:', title);
+    console.log('  Body:', body);
+    console.log('  Notification permission:', Notification.permission);
+    console.log('  notificationPermissionGranted flag:', notificationPermissionGranted);
+    
     if (!notificationPermissionGranted || !('Notification' in window)) {
-        console.log('Cannot show notification - permission not granted');
+        console.error('❌ Cannot show notification - permission not granted');
         return;
     }
     
     try {
-        console.log('Showing notification:', title);
+        console.log('✅ Creating Notification object...');
         const notification = new Notification(title, {
             body: body,
             icon: icon,
@@ -101,11 +112,25 @@ function showBrowserNotification(title, body, icon = '🎈') {
             vibrate: [200, 100, 200]
         });
         
+        console.log('✅ Notification object created:', notification);
         playSound('click');
         
         notification.onclick = () => {
+            console.log('Notification clicked');
             window.focus();
             notification.close();
+        };
+        
+        notification.onshow = () => {
+            console.log('✅ Notification shown successfully!');
+        };
+        
+        notification.onerror = (error) => {
+            console.error('❌ Notification error:', error);
+        };
+        
+        notification.onclose = () => {
+            console.log('Notification closed');
         };
         
         // Auto close after 30 seconds
@@ -221,6 +246,7 @@ function scheduleAllNotifications() {
 
 // Poll backend for pending notifications
 async function checkBackendNotifications() {
+    console.log('🔄 Checking backend for notifications...');
     try {
         const res = await fetch(`${API_URL}/notifications`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -315,6 +341,12 @@ async function fetchTodos() {
 }
 
 async function createTodo(text, scheduled_day, start_time = null, target_date = null) {
+    console.log('\n📝 === CREATING TODO ===');
+    console.log('Text:', text);
+    console.log('Scheduled day:', scheduled_day);
+    console.log('Start time:', start_time);
+    console.log('Target date:', target_date);
+    
     try {
         console.log('Creating todo:', text, 'Day:', scheduled_day, 'Time:', start_time, 'Date:', target_date);
         
@@ -620,7 +652,6 @@ function renderTodos() {
                 <button class="delete-btn" onclick="handleDelete('${todo.id}')">DELETE</button>
             </li>`;
         });
-    });
     });
     
     todoList.innerHTML = html || `<li style="text-align:center;padding:40px;color:#666;"><p style="font-size:1.2rem;">No tasks...</p></li>`;

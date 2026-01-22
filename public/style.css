@@ -697,6 +697,9 @@ li.todo-item.completed span.todo-text {
     background: rgba(255, 0, 0, 0.05);
     border: 2px solid rgba(255, 0, 0, 0.2);
     border-radius: 10px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .day-label {
@@ -1327,6 +1330,13 @@ li.todo-item.completed span.todo-text {
     
     .day-selector {
         padding: 12px;
+        display: block !important;
+        visibility: visible !important;
+        overflow: visible !important;
+    }
+    
+    .date-label {
+        display: block !important;
     }
 }
 

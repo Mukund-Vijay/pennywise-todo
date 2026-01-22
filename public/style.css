@@ -1256,16 +1256,21 @@ li.todo-item.completed span.todo-text {
     .date-input-wrapper {
         margin-top: 12px;
         padding-top: 12px;
+        display: block !important;
+        visibility: visible !important;
     }
     
     .date-input {
         width: 100%;
         font-size: 1rem;
         padding: 12px;
+        display: block !important;
     }
     
     .time-selector {
         margin-top: 15px;
+        display: block !important;
+        visibility: visible !important;
     }
     
     .summary-content {

@@ -1253,6 +1253,21 @@ li.todo-item.completed span.todo-text {
         font-size: 0.8rem;
     }
     
+    .date-input-wrapper {
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+    
+    .date-input {
+        width: 100%;
+        font-size: 1rem;
+        padding: 12px;
+    }
+    
+    .time-selector {
+        margin-top: 15px;
+    }
+    
     .summary-content {
         padding: 20px;
         width: 95%;
@@ -1293,6 +1308,20 @@ li.todo-item.completed span.todo-text {
         flex-direction: column;
         gap: 5px;
         align-items: flex-start;
+    }
+    
+    .date-input-wrapper {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+    
+    .date-input {
+        font-size: 1rem;
+        padding: 10px;
+    }
+    
+    .day-selector {
+        padding: 12px;
     }
 }
 

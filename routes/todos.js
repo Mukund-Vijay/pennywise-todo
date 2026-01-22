@@ -167,13 +167,28 @@ router.get('/summary/weekly', authenticateToken, async (req, res) => {
         
         res.json({
             dayStats,
-            totalScheduled,
-            totalCompleted,
-            completedOnTime,
-            completionRate: totalScheduled > 0 ? Math.round((totalCompleted / totalScheduled) * 100) : 0,
-            onTimeRate: totalCompleted > 0 ? Math.round((completedOnTime / totalCompleted) * 100) : 0,
-            mostProductiveDay,
-            leastProductiveDay
+            overall: {
+                scheduled: totalScheduled,
+                completed: totalCompleted,
+                completionRate: totalScheduled > 0 ? (totalCompleted / totalScheduled) : 0,
+                onTimeRate: totalCompleted > 0 ? (completedOnTime / totalCompleted) : 0
+            },
+            mostProductiveDay: mostProductiveDay ? {
+                day: dayStats[mostProductiveDay.day].name,
+                stats: {
+                    scheduled: mostProductiveDay.scheduled,
+                    completed: mostProductiveDay.completed
+                },
+                rate: mostProductiveDay.completionRate / 100
+            } : null,
+            leastProductiveDay: leastProductiveDay ? {
+                day: dayStats[leastProductiveDay.day].name,
+                stats: {
+                    scheduled: leastProductiveDay.scheduled,
+                    completed: leastProductiveDay.completed
+                },
+                rate: leastProductiveDay.completionRate / 100
+            } : null
         });
     } catch (error) {
         console.error('Weekly summary error:', error);

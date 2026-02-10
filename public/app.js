@@ -1,5 +1,7 @@
-// Version: 1.0.1 - Fixed notification system
-const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+// Version: 2.0.0 - Mobile app with native notifications
+import { mobileNotifications } from './mobile-notifications.js';
+
+const API_URL = 'http://10.31.31.231:3000/api';
 let token = localStorage.getItem('token');
 let user = JSON.parse(localStorage.getItem('user') || '{}');
 let todos = [];
@@ -55,36 +57,38 @@ window.addEventListener('resize', () => {
 // Check auth
 if (!token) window.location.href = '/auth.html';
 
-// Request notification permission
+// Request notification permission - Mobile and Web compatible
 async function requestNotificationPermission() {
-    if (!('Notification' in window)) {
-        console.warn('This browser does not support notifications');
-        return;
-    }
+    // Initialize mobile notifications
+    await mobileNotifications.init();
+    notificationPermissionGranted = true;
     
-    if (Notification.permission === 'granted') {
-        notificationPermissionGranted = true;
-        console.log('Notification permission already granted');
-    } else if (Notification.permission === 'default') {
-        console.log('Requesting notification permission...');
-        const permission = await Notification.requestPermission();
-        notificationPermissionGranted = permission === 'granted';
-        
-        if (notificationPermissionGranted) {
-            showNotification('🔔 Notifications enabled! You\'ll get reminders 10 minutes before tasks.');
-            console.log('Notification permission granted');
-            // Show test button
-            if (testNotificationBtn) testNotificationBtn.style.display = 'inline-block';
-            // Reschedule all existing notifications now that permission is granted
-            scheduleAllNotifications();
-            // Start backend polling
-            startNotificationPolling();
-        } else {
-            console.warn('Notification permission denied');
-            showNotification('⚠️ Notifications blocked. Enable them in browser settings for reminders.');
+    // Web fallback
+    if (!window.Capacitor && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+            notificationPermissionGranted = true;
+            console.log('Notification permission already granted');
+        } else if (Notification.permission === 'default') {
+            console.log('Requesting notification permission...');
+            const permission = await Notification.requestPermission();
+            notificationPermissionGranted = permission === 'granted';
+            
+            if (notificationPermissionGranted) {
+                showNotification('🔔 Notifications enabled! You\'ll get reminders 10 minutes before tasks.');
+                console.log('Notification permission granted');
+                if (testNotificationBtn) testNotificationBtn.style.display = 'inline-block';
+                scheduleAllNotifications();
+                startNotificationPolling();
+            } else {
+                console.warn('Notification permission denied');
+                showNotification('⚠️ Notifications blocked. Enable them in browser settings for reminders.');
+            }
         }
-    } else {
-        console.warn('Notification permission denied');
+    } else if (window.Capacitor) {
+        console.log('📱 Mobile app - notifications configured');
+        showNotification('📱 Mobile notifications enabled!');
+        if (testNotificationBtn) testNotificationBtn.style.display = 'inline-block';
+        scheduleAllNotifications();
     }
 }
 
@@ -138,10 +142,8 @@ function showBrowserNotification(title, body, icon = '🎈') {
     } catch (error) {
         console.error('Notification error:', error);
     }
-}
-
-// Schedule notification for a task
-function scheduleNotification(todo) {
+} //- Mobile and Web compatible
+async function scheduleNotification(todo) {
     if (!todo.start_time) {
         console.log(`No start time for todo ${todo.id}`);
         return;
@@ -150,6 +152,18 @@ function scheduleNotification(todo) {
     if (!notificationPermissionGranted) {
         console.log('Notification permission not granted');
         return;
+    }
+    
+    // For mobile apps, use native notifications
+    if (window.Capacitor) {
+        const success = await mobileNotifications.scheduleNotification(todo);
+        if (success) {
+            console.log(`📱 Mobile notification scheduled for "${todo.text}"`);
+        }
+        return;
+    }
+    
+    // Web browser fallback    return;
     }
     
     // Cancel existing notification for this todo if any
@@ -228,7 +242,6 @@ function scheduleNotification(todo) {
     } else {
         console.log(`⏭️ Skipping past notification for "${todo.text}" (was ${Math.abs(Math.round(timeUntilReminder/1000/60))} minutes ago)`);
     }
-}
 
 // Schedule all pending notifications
 function scheduleAllNotifications() {
@@ -645,7 +658,7 @@ function renderTodos() {
         groupTodos.forEach(todo => {
             const isCompleted = Boolean(todo.completed);
             const timeDisplay = todo.start_time ? `<span class="todo-time">⏰ ${formatTime(todo.start_time)}</span>` : '';
-            html += `<li class="todo-item ${isCompleted?'completed':''}" data-id="${todo.id}">
+            html += `<li class="todo-item ${isCompleted?'completed':''}" data-id="${todo.id}" data-todo-id="${todo.id}">
                 <input type="checkbox" class="todo-checkbox" ${isCompleted?'checked':''} onchange="toggleTodo('${todo.id}')">
                 <span class="todo-text">${escapeHtml(todo.text)}</span>
                 ${timeDisplay}

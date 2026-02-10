@@ -158,6 +158,13 @@
     <!-- Balloon Burst Animation -->
     <canvas id="balloonCanvas"></canvas>
 
-    <script src="app.js"></script>
+    <!-- Capacitor for mobile apps -->
+    <script type="module">
+        import { Capacitor } from 'https://cdn.jsdelivr.net/npm/@capacitor/core@latest/dist/index.js';
+        window.Capacitor = Capacitor;
+    </script>
+    
+    <script type="module" src="mobile-notifications.js"></script>
+    <script src="app.js" type="module"></script>
 </body>
 </html>

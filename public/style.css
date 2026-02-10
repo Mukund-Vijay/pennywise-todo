@@ -298,6 +298,25 @@ li.todo-item.completed span.todo-text {
     color: #777 !important;
 }
 
+/* Highlight animation for notification tap */
+.todo-item.highlight {
+    animation: highlightPulse 0.5s ease-in-out 3;
+    background: rgba(255, 0, 0, 0.3) !important;
+    border-left-color: #ff0000 !important;
+    transform: scale(1.02);
+}
+
+@keyframes highlightPulse {
+    0%, 100% {
+        background: rgba(255, 0, 0, 0.3);
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    }
+    50% {
+        background: rgba(255, 0, 0, 0.6);
+        box-shadow: 0 0 40px rgba(255, 0, 0, 0.8);
+    }
+}
+
 .todo-checkbox {
     width: 20px;
     height: 20px;

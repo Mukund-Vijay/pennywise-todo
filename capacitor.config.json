@@ -1,0 +1,28 @@
+{
+  "appId": "com.pennywise.todo",
+  "appName": "Pennywise Todo",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://10.31.31.231:3000",
+    "cleartext": true,
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#FF0000",
+      "sound": "beep.wav"
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    }
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

@@ -27,3 +27,12 @@ desktop.ini
 # Temporary files
 *.tmp
 *.temp
+
+# Capacitor/Mobile
+android/app/build/
+android/.gradle/
+android/local.properties
+ios/App/Pods/
+ios/App/*.xcworkspace/xcuserdata/
+*.apk
+*.aab

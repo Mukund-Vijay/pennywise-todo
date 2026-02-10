@@ -11,23 +11,41 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "electron": "electron .",
-    "app": "concurrently \"node server.js\" \"wait-on http://localhost:3000 && electron .\""
+    "app": "concurrently \"node server.js\" \"wait-on http://localhost:3000 && electron .\"",
+    "mobile:sync": "npx cap sync",
+    "mobile:android": "npx cap open android",
+    "mobile:ios": "npx cap open ios",
+    "mobile:build": "npm run mobile:sync && echo Mobile platforms synced! Open Android Studio or Xcode to build.",
+    "mobile:run:android": "npx cap run android",
+    "mobile:run:ios": "npx cap run ios"
   },
-  "keywords": ["todo", "pennywise", "horror", "pwa"],
+  "keywords": [
+    "todo",
+    "pennywise",
+    "horror",
+    "pwa"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
-    "electron": "^28.1.0",
     "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "nodemon": "^3.0.2",
     "wait-on": "^7.2.0"
   }
 }
